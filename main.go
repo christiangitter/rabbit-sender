@@ -22,16 +22,29 @@ func main() {
 	defer ch.Close()
 
 	// Declare a queue, which will create it if it doesn't exist
-	queue_name := "my_queue"
+	queue_name := "test_queue"
 	_, err = ch.QueueDeclare(
 		queue_name, // name
-		false,      // durable
+		true,       // durable
 		false,      // delete when unused
 		false,      // exclusive
 		false,      // no-wait
 		nil,        // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
-
 	log.Printf("Queue '%s' is ensured to exist.", queue_name)
+
+	// Publish a message to the queue
+	body := "Hello World!"
+	err = ch.Publish(
+		"",         // exchange
+		queue_name, // routing key
+		false,      // mandatory
+		false,      // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(body),
+		})
+	failOnError(err, "Failed to publish a message")
+	log.Printf(" [x] Sent %s", body)
 }
