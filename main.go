@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 
 	"github.com/streadway/amqp"
@@ -34,16 +35,24 @@ func main() {
 	failOnError(err, "Failed to declare a queue")
 	log.Printf("Queue '%s' is ensured to exist.", queue_name)
 
-	// Publish a message to the queue
-	body := "Hello World!"
+	// Create a message in JSON format
+	message := map[string]interface{}{
+		"hello": "world",
+		"foo":   "bar",
+		"baz":   123,
+		"qux":   []string{"a", "b", "c"},
+	}
+	body, err := json.Marshal(message)
+	failOnError(err, "Failed to marshal JSON")
+
 	err = ch.Publish(
 		"",         // exchange
 		queue_name, // routing key
 		false,      // mandatory
 		false,      // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
+			ContentType: "application/json",
+			Body:        body,
 		})
 	failOnError(err, "Failed to publish a message")
 	log.Printf(" [x] Sent %s", body)
